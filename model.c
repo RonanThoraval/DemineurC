@@ -20,6 +20,10 @@ struct Env_t {
   SDL_Texture *text;
   SDL_Texture *flag;
   SDL_Color *colors;
+  uint nb_rows;
+  uint nb_cols;
+  uint nb_bombs;
+  bool first_click; //True if there has been a first click, false else
 };
 
 /* **************************************************************** */
@@ -34,8 +38,10 @@ Env *init(SDL_Window *win, SDL_Renderer *ren, int argc, char *argv[]) {
   env->flag = IMG_LoadTexture(ren, FLAG);
   if (!env->flag) ERROR("IMG_LoadTexture: %s\n", FLAG);
 
-  env->g=game_init(8,8,10,1,1);
-  env->square_size=fmin(w/get_nb_cols(env->g),h/get_nb_rows(env->g));
+  env->nb_cols=8;
+  env->nb_rows=8;
+  env->nb_bombs=10;
+  env->square_size=fmin(w/env->nb_cols,h/env->nb_rows);
 
   SDL_Color bleu={0,0,255,255};
   SDL_Color noir={255,255,255,255};
@@ -58,15 +64,19 @@ void render(SDL_Window *win, SDL_Renderer *ren, Env *env) {
     int w, h;
     SDL_GetWindowSize(win, &w, &h);
 
-    env->square_size=fmin(w/get_nb_cols(env->g),h/get_nb_rows(env->g));
+    env->square_size=fmin(w/env->nb_cols,h/env->nb_rows);
 
     SDL_SetRenderDrawColor(ren, 0, 0, 0, SDL_ALPHA_OPAQUE);
-    for (uint i=0 ; i<=get_nb_rows(env->g); i++) {
-        SDL_RenderDrawLine(ren,0,i*env->square_size,env->square_size*get_nb_rows(env->g),i*env->square_size);
+    for (uint i=0 ; i<=env->nb_rows; i++) {
+        SDL_RenderDrawLine(ren,0,i*env->square_size,env->square_size*env->nb_rows,i*env->square_size);
     }
 
-    for (uint j=0 ; j<=get_nb_cols(env->g) ; j++) {
-        SDL_RenderDrawLine(ren,j*env->square_size,0,j*env->square_size,env->square_size*get_nb_rows(env->g));
+    for (uint j=0 ; j<=env->nb_cols ; j++) {
+        SDL_RenderDrawLine(ren,j*env->square_size,0,j*env->square_size,env->square_size*env->nb_rows);
+    }
+
+    if (env->first_click==false) {
+      return;
     }
 
     for (uint i=0 ; i<get_nb_rows(env->g) ; i++) {
@@ -113,7 +123,12 @@ bool process(SDL_Window *win, SDL_Renderer *ren, Env *env, SDL_Event *e) {
       uint i = (mouse.y - mouse.y % env->square_size) / env->square_size;
       uint j = (mouse.x - mouse.x % env->square_size) / env->square_size;
       if (e->button.button==SDL_BUTTON_LEFT) {
-          printf("a");
+          /* If first click, init game */
+          if (env->first_click==false) {
+            env->first_click=true;
+            game g= game_init(env->nb_rows,env->nb_cols,env->nb_bombs,i,j);
+            env->g=g;
+          }
           if (get_number_bombs_around(env->g,i,j)!=-1) {
             reveal_case(env->g,i,j);
           } else {
