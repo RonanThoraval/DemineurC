@@ -23,6 +23,7 @@ struct Env_t {
   uint nb_rows;
   uint nb_cols;
   uint nb_bombs;
+  bool has_changed;
   bool first_click; //True if there has been a first click, false else
 };
 
@@ -43,22 +44,23 @@ Env *init(SDL_Window *win, SDL_Renderer *ren, int argc, char *argv[]) {
   env->nb_bombs=10;
   env->first_click=false;
   env->square_size=fmin(w/env->nb_cols,h/env->nb_rows);
+  env->has_changed=true;
 
-  SDL_Color bleu={0,0,255,255};
-  SDL_Color noir={255,255,255,255};
-  SDL_Color jaune={255,255,0,255};
-  SDL_Color rouge={255,0,0,255};
-  SDL_Color violet={255,0,255,255};
-  SDL_Color vert={0,255,0,255};
-  SDL_Color cyan={0,255,255,255};
+  SDL_Color bleu={0,0,200,125};
+  SDL_Color noir={255,255,255,125};
+  SDL_Color jaune={200,200,0,255};
+  SDL_Color rouge={150,0,0,125};
+  SDL_Color violet={200,0,200,125};
+  SDL_Color vert={0,200,0,125};
+  SDL_Color cyan={0,125,200,125};
   SDL_Color gris={125,125,125,255};
   env->colors[0]=bleu;
-  env->colors[1]=vert;
+  env->colors[6]=vert;
   env->colors[2]=rouge;
   env->colors[3]=jaune;
   env->colors[4]=gris;
   env->colors[5]=violet;
-  env->colors[6]=cyan;
+  env->colors[1]=cyan;
   env->colors[7]=noir;
   return env;
 }
@@ -88,7 +90,26 @@ void render(SDL_Window *win, SDL_Renderer *ren, Env *env) {
 
     for (uint i=0 ; i<get_nb_rows(env->g) ; i++) {
         for (uint j=0 ; j<get_nb_cols(env->g) ; j++) {
-            if (is_shown(env->g,i,j) && get_number_bombs_around(env->g,i,j)>=0) {
+          if (is_shown(env->g,i,j)) {
+              if (get_number_bombs_around(env->g,i,j)==0) {
+                SDL_SetRenderDrawColor( ren, 100, 100, 100, 255 );
+              } else {
+                SDL_SetRenderDrawColor( ren, 125, 125, 125, 255 );
+              }
+              rect.x=j*env->square_size+1;
+              rect.y=i*env->square_size+1;
+              rect.w=env->square_size-1;
+              rect.h=env->square_size-1;
+              SDL_RenderFillRect(ren,&rect);
+            } else {
+              SDL_SetRenderDrawColor(ren,190,190,190,255);
+              rect.x=j*env->square_size+1;
+              rect.y=i*env->square_size+1;
+              rect.w=env->square_size-4;
+              rect.h=env->square_size-4;
+              SDL_RenderFillRect(ren,&rect);
+            }
+            if (is_shown(env->g,i,j) && get_number_bombs_around(env->g,i,j)>0) {
               TTF_Font* font = TTF_OpenFont(FONT, env->square_size);
               if (!font) ERROR("TTF_OpenFont: %s\n", FONT);
               TTF_SetFontStyle(font, TTF_STYLE_NORMAL);
@@ -117,6 +138,14 @@ void render(SDL_Window *win, SDL_Renderer *ren, Env *env) {
 
 }
 
+void set_not_changed(Env *env) {
+  env->has_changed=false;
+}
+
+bool get_changed(Env *env) {
+  return env->has_changed;
+}
+
 /* **************************************************************** */
 
 bool process(SDL_Window *win, SDL_Renderer *ren, Env *env, SDL_Event *e) {
@@ -124,6 +153,7 @@ bool process(SDL_Window *win, SDL_Renderer *ren, Env *env, SDL_Event *e) {
     return true;
   }
   if (e->type==SDL_MOUSEBUTTONDOWN) {
+      env->has_changed=true;
       SDL_Point mouse;
       SDL_GetMouseState(&mouse.x,&mouse.y);
       uint i = (mouse.y - mouse.y % env->square_size) / env->square_size;

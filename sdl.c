@@ -42,13 +42,18 @@ int main(int argc, char* argv[]) {
     }
 
     /* background in gray */
-    SDL_SetRenderDrawColor(ren, 0xA0, 0xA0, 0xA0, 0xFF);
-    SDL_RenderClear(ren);
+    
+    
+    if(get_changed(env)) {
+      /* render all what you want */
+      SDL_SetRenderDrawColor(ren, 0xA0, 0xA0, 0xA0, 0xFF);
+      SDL_RenderClear(ren);
+      render(win, ren, env);
+      SDL_RenderPresent(ren);
+      SDL_Delay(DELAY);
+      set_not_changed(env);
+    }
 
-    /* render all what you want */
-    render(win, ren, env);
-    SDL_RenderPresent(ren);
-    SDL_Delay(DELAY);
   }
 
   /* clean your environment */

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <assert.h>
+#include <time.h>
 
 typedef struct {
     int nb_bombs_around; //number of bombs around the square, -1 if it's a bomb
@@ -103,6 +104,7 @@ void init_grid(game g, int x, int y) {
     /* Pose random bombs */
     int tmp_x, tmp_y;
     for (int n=0 ; n<get_nb_bombs(g) ; n++) {
+        srand(time(NULL));
         do {
             tmp_x = rand() ;
             //printf("rand_x=%d\n", tmp_x);
@@ -114,7 +116,6 @@ void init_grid(game g, int x, int y) {
         //printf("n=%d, x=%d, y=%d\n",n,tmp_x,tmp_y);
         set_number_bombs_around(g,tmp_x,tmp_y,-1);
     }
-    game_print(g);
 
     /* Filling grid in function of bombs */
     for (int i=0 ; i < get_nb_rows(g) ; i++) {
