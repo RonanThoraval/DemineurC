@@ -19,7 +19,7 @@ struct Env_t {
   uint square_size;
   SDL_Texture *text;
   SDL_Texture *flag;
-  SDL_Color *colors;
+  SDL_Color colors[8];
   uint nb_rows;
   uint nb_cols;
   uint nb_bombs;
@@ -41,24 +41,31 @@ Env *init(SDL_Window *win, SDL_Renderer *ren, int argc, char *argv[]) {
   env->nb_cols=8;
   env->nb_rows=8;
   env->nb_bombs=10;
+  env->first_click=false;
   env->square_size=fmin(w/env->nb_cols,h/env->nb_rows);
 
   SDL_Color bleu={0,0,255,255};
   SDL_Color noir={255,255,255,255};
-  SDL_Color rose={255,255,0,0};
-  SDL_Color rouge={0,255,255,0};
-  SDL_Color vert={255,0,255,0};
-  SDL_Color orange={255,0,0,255};
-  SDL_Color gris={125,0,125,255};
-  SDL_Color marron={0,125,125,255};
-  SDL_Color tab[8]={bleu,noir,rose,rouge,vert,orange,gris,marron};
-  env->colors = tab;
+  SDL_Color jaune={255,255,0,255};
+  SDL_Color rouge={255,0,0,255};
+  SDL_Color violet={255,0,255,255};
+  SDL_Color vert={0,255,0,255};
+  SDL_Color cyan={0,255,255,255};
+  SDL_Color gris={125,125,125,255};
+  env->colors[0]=bleu;
+  env->colors[1]=vert;
+  env->colors[2]=rouge;
+  env->colors[3]=jaune;
+  env->colors[4]=gris;
+  env->colors[5]=violet;
+  env->colors[6]=cyan;
+  env->colors[7]=noir;
   return env;
 }
 
 /* **************************************************************** */
 
-void render(SDL_Window *win, SDL_Renderer *ren, Env *env) { 
+void render(SDL_Window *win, SDL_Renderer *ren, Env *env) {
     SDL_Rect rect;
     /* get current window size */
     int w, h;
@@ -75,14 +82,13 @@ void render(SDL_Window *win, SDL_Renderer *ren, Env *env) {
         SDL_RenderDrawLine(ren,j*env->square_size,0,j*env->square_size,env->square_size*env->nb_rows);
     }
 
-    if (env->first_click==false) {
+    if (!env->first_click) {
       return;
     }
 
     for (uint i=0 ; i<get_nb_rows(env->g) ; i++) {
         for (uint j=0 ; j<get_nb_cols(env->g) ; j++) {
-            if (is_shown(env->g,i,j) && get_number_bombs_around(env->g,i,j)!=0) {
-              
+            if (is_shown(env->g,i,j) && get_number_bombs_around(env->g,i,j)>=0) {
               TTF_Font* font = TTF_OpenFont(FONT, env->square_size);
               if (!font) ERROR("TTF_OpenFont: %s\n", FONT);
               TTF_SetFontStyle(font, TTF_STYLE_NORMAL);
@@ -126,6 +132,7 @@ bool process(SDL_Window *win, SDL_Renderer *ren, Env *env, SDL_Event *e) {
           /* If first click, init game */
           if (env->first_click==false) {
             env->first_click=true;
+            printf("First click : %u %u\n",i,j);
             game g= game_init(env->nb_rows,env->nb_cols,env->nb_bombs,i,j);
             env->g=g;
           }
@@ -149,7 +156,9 @@ bool process(SDL_Window *win, SDL_Renderer *ren, Env *env, SDL_Event *e) {
 /* **************************************************************** */
 
 void clean(SDL_Window *win, SDL_Renderer *ren, Env *env) {
-  game_delete(env->g);
+  if (env->first_click) {
+    game_delete(env->g);
+  }
   SDL_DestroyTexture(env->text);
   SDL_DestroyTexture(env->flag);
 

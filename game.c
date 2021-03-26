@@ -11,111 +11,116 @@ typedef struct {
 } square; // a case (i,j)
 
 struct game_s {
-    uint nb_rows;
-    uint nb_cols;
-    uint nb_bombs; //total number of bombs in the game
+    int nb_rows;
+    int nb_cols;
+    int nb_bombs; //total number of bombs in the game
     square ** grid; // Game grid, composed of squares
 };
 
+void game_print(game g ) {
+    assert(g!=NULL);
+    for (int i =0 ; i<get_nb_rows(g) ; i++) {
+        for (int j=0 ; j<get_nb_cols(g) ; j++) {
+            printf("%i ",get_number_bombs_around(g,i,j));
+        }
+        printf("\n");
+    }
+    printf("\n");
+    for (int i =0 ; i<get_nb_rows(g) ; i++) {
+        for (int j=0 ; j<get_nb_cols(g) ; j++) {
+            printf("%i ",is_shown(g,i,j));
+        }
+        printf("\n");
+    }
+}
+
+
 /* Returns the number of bombs around the square of the cas (i,j) */
-int get_number_bombs_around(game g, uint i, uint j) {
+int get_number_bombs_around(game g, int i, int j) {
     assert(g!=NULL);
     return g->grid[i][j].nb_bombs_around;
 }
 
-uint get_nb_rows(game g) {
+int get_nb_rows(game g) {
     assert(g!=NULL);
     return g->nb_rows;
 }
 
-uint get_nb_cols(game g) {
+int get_nb_cols(game g) {
     assert(g!=NULL);
     return g->nb_cols;
 }
 
-uint get_nb_bombs(game g) {
+int get_nb_bombs(game g) {
     assert(g!=NULL);
     return g->nb_bombs;
 }
 
 /* Sets the number of bombs around the cas (i,j) to nb */
-void set_number_bombs_around(game g, uint i, uint j, uint nb) {
+void set_number_bombs_around(game g, int i, int j, int nb) {
     g->grid[i][j].nb_bombs_around = nb;
 }
 
+
+/* Returns true if the case (i,j) is in the grid, False else */
+bool is_inside_grid(game g, int i, int j) {
+    return (i>=0 && j>=0 && i<get_nb_rows(g) && j<get_nb_cols(g));
+}
+
 /********** Retuns the number of bombs around the case (i,j) *********/
-uint number_bombs_around(game g, uint i, uint j) {
-    uint cpt=0 ;
-    if (i!=0) {
-        if (j!=0 && get_number_bombs_around(g,i-1,j-1)==-1) {
-            cpt++;
+int number_bombs_around(game g, int i, int j) {
+    int cpt=0 ;
+    for (int k=i-1 ; k<=i+1 ; k++) {
+        for (int l=j-1 ; l<=j+1 ; l++) {
+            if (is_inside_grid(g,k,l) && g->grid[k][l].nb_bombs_around==-1 && (k!=i || l!=j)) { //if the case(k,l)!=(i,j) and there is a bomb in the case (k,l)
+                cpt++;
+            }
         }
-        if (j!=get_nb_cols(g)-1 && get_number_bombs_around(g,i-1,j+1)==-1) {
-            cpt++;
-        }
-        if (get_number_bombs_around(g,i-1,j)==-1) {
-            cpt++;
-        }
-    } 
-    if (i!=get_nb_rows(g)-1) {
-        if (get_number_bombs_around(g,i+1,j)==-1) {
-            cpt++;
-        }
-        if (j!=0 &&get_number_bombs_around(g,i+1,j-1)==-1) {
-            cpt++;
-        }
-        if (j!=get_nb_cols(g)-1 && get_number_bombs_around(g,i+1,j+1)==-1) {
-            cpt++;
-        }
-    }
-    if (j!=0 && get_number_bombs_around(g,i,j-1)==-1) {
-        cpt++;
-    } 
-    if (j!=get_nb_cols(g)-1 && get_number_bombs_around(g,i,j+1)==-1 ) {
-        cpt ++;
     }
     return cpt;
 }
 
 /******** Fills the grid with bombs and fills numbers in the others cases ***********/
-void init_grid(game g, uint x, uint y) {
-    for (uint i=0 ; i < get_nb_rows(g) ; i++) {
-        for (uint j=0 ; j < get_nb_cols(g) ; j++) {
+void init_grid(game g, int x, int y) {
+    for (int i=0 ; i < get_nb_rows(g) ; i++) {
+        for (int j=0 ; j < get_nb_cols(g) ; j++) {
             g->grid[i][j].flag=false; // no flags yet
             set_number_bombs_around(g,i,j,10); // impossible number -> to delete
             g->grid[i][j].is_shown=false;
         }
     }
     set_number_bombs_around(g,x,y,0); // no bomb where the user has clicked
-    set_number_bombs_around(g,x,y+1,11);
-    set_number_bombs_around(g,x,y-1,11);
-    set_number_bombs_around(g,x+1,y,11);
-    set_number_bombs_around(g,x+1,y+1,11);
-    set_number_bombs_around(g,x+1,y-1,11);
-    set_number_bombs_around(g,x-1,y,11);
-    set_number_bombs_around(g,x-1,y+1,11);
-    set_number_bombs_around(g,x-1,y-1,11);
+    // No bomb around where the user has clicked
 
-    /* Pose random bombs */
-    uint tmp_x, tmp_y;
-    for (uint n=0 ; n<get_nb_bombs(g) ; n++) {
-        do {
-            tmp_x = rand() ;
-            printf("rand_x=%u\n", tmp_x);
-            tmp_x = tmp_x % get_nb_rows(g);
-            tmp_y = rand() ;
-            printf("rand_y=%u\n", tmp_y);
-            tmp_y = tmp_y % get_nb_cols(g);
-        } while (get_number_bombs_around(g,tmp_x,tmp_y)<1 || get_number_bombs_around(g,tmp_x,tmp_y)==11);
-        printf("n=%u, x=%u, y=%u\n",n,tmp_x,tmp_y);
-        set_number_bombs_around(g,tmp_x,tmp_y,-1);
+    for (int k=x-1 ; k<=x+1 ; k++) {
+        for (int l=y-1 ; l<=y+1 ; l++) {
+            if (is_inside_grid(g,k,l) && (k!=x || l!=y)) {
+                set_number_bombs_around(g,k,l,11);
+            }
+        }
     }
 
+    /* Pose random bombs */
+    int tmp_x, tmp_y;
+    for (int n=0 ; n<get_nb_bombs(g) ; n++) {
+        do {
+            tmp_x = rand() ;
+            //printf("rand_x=%d\n", tmp_x);
+            tmp_x = tmp_x % get_nb_rows(g);
+            tmp_y = rand() ;
+            //printf("rand_y=%d\n", tmp_y);
+            tmp_y = tmp_y % get_nb_cols(g);
+        } while (get_number_bombs_around(g,tmp_x,tmp_y)<1 || get_number_bombs_around(g,tmp_x,tmp_y)==11);
+        //printf("n=%d, x=%d, y=%d\n",n,tmp_x,tmp_y);
+        set_number_bombs_around(g,tmp_x,tmp_y,-1);
+    }
+    game_print(g);
+
     /* Filling grid in function of bombs */
-    for (uint i=0 ; i < get_nb_rows(g) ; i++) {
-        for (uint j=0 ; j < get_nb_cols(g) ; j++) {
+    for (int i=0 ; i < get_nb_rows(g) ; i++) {
+        for (int j=0 ; j < get_nb_cols(g) ; j++) {
             if (get_number_bombs_around(g,i,j)==10 || get_number_bombs_around(g,i,j)==11) {
-                uint nb = number_bombs_around(g,i,j);
+                int nb = number_bombs_around(g,i,j);
                 set_number_bombs_around(g,i,j,nb);
             }
         }
@@ -125,7 +130,7 @@ void init_grid(game g, uint x, uint y) {
 
 
 /*** Allocation of the game structure ****/
-game game_init(uint nb_rows, uint nb_cols, uint nb_bombs, uint x , uint y) {
+game game_init(int nb_rows, int nb_cols, int nb_bombs, int x , int y) {
     game g = malloc(sizeof(struct game_s));
     assert(g!=NULL);
 
@@ -135,10 +140,10 @@ game game_init(uint nb_rows, uint nb_cols, uint nb_bombs, uint x , uint y) {
         fprintf(stderr,"Erreur d'allocation.\n");
         exit(EXIT_FAILURE);
     }
-    for (uint i=0 ; i<nb_rows ; i++) {
+    for (int i=0 ; i<nb_rows ; i++) {
         g->grid[i]=calloc(nb_cols,sizeof(square));
         if (g->grid[i]==NULL) {
-            for (uint j=0 ; j<i ; j++) {
+            for (int j=0 ; j<i ; j++) {
                 free(g->grid[j]);
             }
             free(g->grid);
@@ -159,8 +164,7 @@ game game_init(uint nb_rows, uint nb_cols, uint nb_bombs, uint x , uint y) {
 
 void game_delete(game g) {
     assert(g!=NULL);
-    assert(g->grid!=NULL);
-    for (uint i=0 ; i<get_nb_rows(g) ; i++) {
+    for (int i=0 ; i<get_nb_rows(g) ; i++) {
         if (g->grid[i]!=NULL) {
             free(g->grid[i]);
         }
@@ -172,66 +176,45 @@ void game_delete(game g) {
 }
 
 /* Return true if there is a flag in the case (i,j), False else */
-bool is_flagged(game g, uint i, uint j) {
+bool is_flagged(game g, int i, int j) {
     return g->grid[i][j].flag;
 }
 
 /*  Puts a flag in case (i,j) */
-void pose_flag(game g, uint i, uint j) {
+void pose_flag(game g, int i, int j) {
     g->grid[i][j].flag=true;
 }
 
 
 /* Removes the flag in case (i,j) */
-void remove_flag(game g, uint i, uint j) {
+void remove_flag(game g, int i, int j) {
     g->grid[i][j].flag=false;
 }
 
 
 /* Returns true if the number in the case (i,j) has been revealed, False else */
-bool is_shown(game g, uint i, uint j) {
+bool is_shown(game g, int i, int j) {
     assert(g!=NULL);
     return g->grid[i][j].is_shown;
 }
 
 
 /* Reveals the number in case (i,j) */
-void show(game g , uint i, uint j) {
+void show(game g , int i, int j) {
+    assert(g!=NULL);
+    assert(g->grid!=NULL);
     g->grid[i][j].is_shown=true;
 }
 
 
 /* (Recursive) Reveals case and the others around if the case is a zero */
-void reveal_case(game g, uint i, uint j) {
+void reveal_case(game g, int i, int j) {
     show(g,i,j); //reveals current case
-    if (get_number_bombs_around(g,i,j)==0) {
-        if (i!=0) {
-            if (j!=0 && !is_shown(g,i-1,j-1)) {
-                reveal_case(g,i-1,j-1);
+    for (int k=i-1 ; k<=i+1 ; k++) {
+        for (int l=j-1 ; l<=j+1 ; l++) {
+            if (is_inside_grid(g,k,l) && (k!=i || l!=j) && !is_shown(g,k,l) && get_number_bombs_around(g,i,j)==0) {
+                reveal_case(g,k,l);
             }
-            if (j!=get_nb_cols(g)-1 && !is_shown(g,i-1,j+1)) {
-                reveal_case(g,i-1,j+1);
-            }
-            if ( !is_shown(g,i-1,j)) {
-                reveal_case(g,i-1,j);
-            }
-        }
-        if (i!=get_nb_rows(g)-1) {
-            if (j!=0 && !is_shown(g,i+1,j-1)) {
-                reveal_case(g,i+1,j-1);
-            }
-            if (j!=get_nb_cols(g)-1 && !is_shown(g,i+1,j+1)) {
-                reveal_case(g,i+1,j+1);
-            }
-            if ( !is_shown(g,i+1,j)) {
-                reveal_case(g,i+1,j);
-            }
-        }
-        if (j!=0 && !is_shown(g,i,j-1))  {
-            reveal_case(g,i,j-1);
-        }
-        if (j!=get_nb_cols(g)-1 && !is_shown(g,i,j+1)) {
-            reveal_case(g,i,j+1);
         }
     }
 }
