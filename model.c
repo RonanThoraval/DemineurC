@@ -130,6 +130,14 @@ void render_bar(SDL_Window *win, SDL_Renderer *ren, Env *env) {
   SDL_RenderDrawLine(ren,w-1,h-env->bar_size+1,w-1,h-1);
 
   render_text(win,ren,env,0,"Nouvelle Partie",7*w/8,h-(env->bar_size)/2,3*w/16,env->bar_size/2);
+
+  render_image(ren, env->flag,5,h-env->bar_size+1, env->bar_size - 5, env->bar_size - 5);
+  /*char nb_bomb[2];
+  sprintf(nb_bomb, "%u", get_nb_bombs(env->g));
+  char nb_flag[2];
+  sprintf(nb_flag, "%u", get_nb_flags(env->g));
+  render_text(win,ren,env,2,nb_flag,env->bar_size+5,env->bar_size,0,0);
+ */
 }
 
 
@@ -254,14 +262,16 @@ bool process(SDL_Window *win, SDL_Renderer *ren, Env *env, SDL_Event *e) {
           if (get_number_bombs_around(env->g,i,j)!=-1) {
             reveal_case(env->g,i,j);
           } else {
-            env->losing=true;
+            env->losing=!is_flagged(env->g,i,j);
           }
       } else if (e->button.button==SDL_BUTTON_RIGHT) {
-          if (!is_flagged(env->g,i,j)) {
-              pose_flag(env->g,i,j);
-          } else {
-              remove_flag(env->g,i,j);
-          }
+		  	if(!is_shown(env->g,i,j)){
+	          if (!is_flagged(env->g,i,j)) {
+	              pose_flag(env->g,i,j);
+	          } else {
+	              remove_flag(env->g,i,j);
+	          }
+			}
       }
       if (env->first_click && has_won(env->g)) {
         env->winning=true;

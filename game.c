@@ -16,6 +16,7 @@ struct game_s {
     int nb_cols;
     int nb_bombs; //total number of bombs in the game
     square ** grid; // Game grid, composed of squares
+	int nb_flags;
 };
 
 void game_print(game g ) {
@@ -157,6 +158,7 @@ game game_init(int nb_rows, int nb_cols, int nb_bombs, int x , int y) {
     g->nb_rows=nb_rows;
     g->nb_cols=nb_cols;
     g->nb_bombs=nb_bombs;
+	g->nb_flags=0;
 
     init_grid(g,x,y); // initialize the grid in function of the game parameters
 
@@ -184,14 +186,19 @@ bool is_flagged(game g, int i, int j) {
 /*  Puts a flag in case (i,j) */
 void pose_flag(game g, int i, int j) {
     g->grid[i][j].flag=true;
+	g->nb_flags++;
 }
 
 
 /* Removes the flag in case (i,j) */
 void remove_flag(game g, int i, int j) {
     g->grid[i][j].flag=false;
+	g->nb_flags--;
 }
 
+int get_nb_flags(game g){
+	return g->nb_flags;
+}
 
 /* Returns true if the number in the case (i,j) has been revealed, False else */
 bool is_shown(game g, int i, int j) {
@@ -204,7 +211,7 @@ bool is_shown(game g, int i, int j) {
 void show(game g , int i, int j) {
     assert(g!=NULL);
     assert(g->grid!=NULL);
-    g->grid[i][j].is_shown=true;
+    g->grid[i][j].is_shown=!is_flagged(g,i,j);
 }
 
 

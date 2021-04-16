@@ -18,6 +18,8 @@ int get_nb_cols(game g);
 
 int get_nb_bombs(game g);
 
+int get_nb_flags(game g);
+
 void set_number_bombs_around(game g, int i, int j, int nb);
 
 bool is_flagged(game g, int i, int j) ;
