@@ -40,8 +40,6 @@ int main(int argc, char* argv[]) {
       quit = process(win, ren, env, &e);
       if (quit) break;
     }
-
-    /* background in gray */
     
     
     if(get_changed(env)) {

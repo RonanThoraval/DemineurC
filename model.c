@@ -11,20 +11,27 @@
 
 #define FONT "arial.ttf"
 #define FLAG "drap.png"
+#define RONAN "ronan.jpeg"
+#define BOMB "bombe.png"
 
 /* **************************************************************** */
 
 struct Env_t {
   game g;
   uint square_size;
+  uint bar_size;
   SDL_Texture *text;
   SDL_Texture *flag;
+  SDL_Texture *bomb;
+  SDL_Texture *ronan;
   SDL_Color colors[8];
   uint nb_rows;
   uint nb_cols;
   uint nb_bombs;
   bool has_changed;
   bool first_click; //True if there has been a first click, false else
+  bool winning; //True if the game is won
+  bool losing; //True if the game is lost
 };
 
 /* **************************************************************** */
@@ -39,12 +46,19 @@ Env *init(SDL_Window *win, SDL_Renderer *ren, int argc, char *argv[]) {
   env->flag = IMG_LoadTexture(ren, FLAG);
   if (!env->flag) ERROR("IMG_LoadTexture: %s\n", FLAG);
 
-  env->nb_cols=8;
-  env->nb_rows=8;
+  env->bomb = IMG_LoadTexture(ren, BOMB);
+  if (!env->bomb) ERROR("IMG_LoadTexture: %s\n", BOMB);
+
+  env->ronan = IMG_LoadTexture(ren,RONAN);
+  if (!env->ronan) ERROR("IMG_LoadTexture: %s\n", RONAN);
+
+  env->nb_cols=20;
+  env->nb_rows=10;
   env->nb_bombs=10;
   env->first_click=false;
   env->square_size=fmin(w/env->nb_cols,h/env->nb_rows);
   env->has_changed=true;
+  env->winning=false;
 
   SDL_Color bleu={0,0,200,125};
   SDL_Color noir={255,255,255,125};
@@ -65,6 +79,39 @@ Env *init(SDL_Window *win, SDL_Renderer *ren, int argc, char *argv[]) {
   return env;
 }
 
+
+/**************** RENDER STATUS BAR ******************/
+
+void render_bar(SDL_Window *win, SDL_Renderer *ren, Env *env) {
+  SDL_Rect rect;
+  int w,h;
+  SDL_GetWindowSize(win, &w, &h);
+
+  SDL_SetRenderDrawColor(ren, 0, 0, 0, SDL_ALPHA_OPAQUE);
+  SDL_RenderDrawLine(ren,3*w/4,h-env->bar_size+1,w-1,h-env->bar_size+1);
+  SDL_RenderDrawLine(ren,3*w/4,h-1,w-1,h-1);
+  SDL_RenderDrawLine(ren,3*w/4,h-env->bar_size+1,3*w/4,h-1);
+  SDL_RenderDrawLine(ren,w-1,h-env->bar_size+1,w-1,h-1);
+
+
+  TTF_Font* font = TTF_OpenFont(FONT, env->square_size);
+  if (!font) ERROR("TTF_OpenFont: %s\n", FONT);
+  TTF_SetFontStyle(font, TTF_STYLE_NORMAL);
+  SDL_Surface* surf = TTF_RenderText_Blended(font, "Nouvelle Partie", env->colors[0]);
+  env->text = SDL_CreateTextureFromSurface(ren, surf);
+  SDL_FreeSurface(surf);
+  TTF_CloseFont(font);
+
+  SDL_QueryTexture(env->text, NULL, NULL, &rect.w, &rect.h);
+  rect.w =3*w/16;
+  rect.h = env->bar_size/2;
+  rect.x =  7*w/8 - rect.w/2  ;
+  rect.y =  h-(env->bar_size/2) - rect.h/2 ;
+  SDL_RenderCopy(ren, env->text, NULL, &rect);
+  /* nouvelle partie */
+}
+
+
 /* **************************************************************** */
 
 void render(SDL_Window *win, SDL_Renderer *ren, Env *env) {
@@ -73,11 +120,34 @@ void render(SDL_Window *win, SDL_Renderer *ren, Env *env) {
     int w, h;
     SDL_GetWindowSize(win, &w, &h);
 
-    env->square_size=fmin(w/env->nb_cols,h/env->nb_rows);
+    env->bar_size = fmin(h / 10, w / 7);
+    env->square_size=fmin(w/env->nb_cols,(h-env->bar_size)/env->nb_rows);
+    render_bar(win,ren,env);
+
+    if (env->winning) {
+      SDL_RenderCopy(ren, env->ronan, NULL, NULL);
+      TTF_Font* font = TTF_OpenFont(FONT, env->square_size);
+      if (!font) ERROR("TTF_OpenFont: %s\n", FONT);
+      TTF_SetFontStyle(font, TTF_STYLE_NORMAL);
+      SDL_Surface* surf = TTF_RenderText_Blended(font, "LOL BRAVO", env->colors[7]);
+      env->text = SDL_CreateTextureFromSurface(ren, surf);
+      SDL_FreeSurface(surf);
+      TTF_CloseFont(font);
+
+      SDL_QueryTexture(env->text, NULL, NULL, &rect.w, &rect.h);
+      rect.x =  w/2 - rect.w/2  ;
+      rect.y =  h/2 - rect.h/2 ;
+      SDL_RenderCopy(ren, env->text, NULL, &rect);
+      return;
+    }
+
+
+    env->bar_size = fmin(h / 10, w / 7);
+    env->square_size=fmin(w/env->nb_cols,(h-env->bar_size)/env->nb_rows);
 
     SDL_SetRenderDrawColor(ren, 0, 0, 0, SDL_ALPHA_OPAQUE);
     for (uint i=0 ; i<=env->nb_rows; i++) {
-        SDL_RenderDrawLine(ren,0,i*env->square_size,env->square_size*env->nb_rows,i*env->square_size);
+        SDL_RenderDrawLine(ren,0,i*env->square_size,env->square_size*env->nb_cols,i*env->square_size);
     }
 
     for (uint j=0 ; j<=env->nb_cols ; j++) {
@@ -134,6 +204,19 @@ void render(SDL_Window *win, SDL_Renderer *ren, Env *env) {
             }
         }
     }
+    if(env->losing) {
+      for (uint i=0 ; i<get_nb_rows(env->g) ; i++) {
+        for (uint j=0 ; j<get_nb_cols(env->g) ; j++) {
+          if (get_number_bombs_around(env->g,i,j)==-1) {
+            rect.w=env->square_size;
+            rect.h=env->square_size;
+            rect.x=j*env->square_size;
+            rect.y=i*env->square_size;
+            SDL_RenderCopy(ren,env->bomb,NULL,&rect);
+          }
+        }
+      }
+    }
 
 
 }
@@ -149,7 +232,9 @@ bool get_changed(Env *env) {
 /* **************************************************************** */
 
 bool process(SDL_Window *win, SDL_Renderer *ren, Env *env, SDL_Event *e) {
-  if (e->type == SDL_QUIT) {
+  int w, h;
+  SDL_GetWindowSize(win, &w, &h);
+  if (e->type == SDL_QUIT || (e->type == SDL_KEYDOWN && e->key.keysym.sym == SDLK_ESCAPE)) {
     return true;
   }
   if (e->type==SDL_MOUSEBUTTONDOWN) {
@@ -158,6 +243,16 @@ bool process(SDL_Window *win, SDL_Renderer *ren, Env *env, SDL_Event *e) {
       SDL_GetMouseState(&mouse.x,&mouse.y);
       uint i = (mouse.y - mouse.y % env->square_size) / env->square_size;
       uint j = (mouse.x - mouse.x % env->square_size) / env->square_size;
+      if (i>=env->nb_rows || j>=env->nb_cols) {
+        /* New game */
+        if (mouse.x>=3*w/4 && mouse.y>=h-env->bar_size) {
+          env->first_click=false;
+          env->winning=false;
+          env->losing=false;
+          game_delete(env->g);
+        }
+        return false;
+      }
       if (e->button.button==SDL_BUTTON_LEFT) {
           /* If first click, init game */
           if (env->first_click==false) {
@@ -169,7 +264,7 @@ bool process(SDL_Window *win, SDL_Renderer *ren, Env *env, SDL_Event *e) {
           if (get_number_bombs_around(env->g,i,j)!=-1) {
             reveal_case(env->g,i,j);
           } else {
-              return true;
+            env->losing=true;
           }
       } else if (e->button.button==SDL_BUTTON_RIGHT) {
           if (!is_flagged(env->g,i,j)) {
@@ -177,6 +272,9 @@ bool process(SDL_Window *win, SDL_Renderer *ren, Env *env, SDL_Event *e) {
           } else {
               remove_flag(env->g,i,j);
           }
+      }
+      if (env->first_click && has_won(env->g)) {
+        env->winning=true;
       }
   }
 

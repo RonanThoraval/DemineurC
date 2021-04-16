@@ -34,4 +34,6 @@ void reveal_case(game g, int i, int j);
 
 void game_print(game g );
 
+bool has_won(game g);
+
 #endif

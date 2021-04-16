@@ -21,6 +21,6 @@ include_directories(${SDL2_ALL_INC})
 add_executable(sdl sdl.c game.c model.c)
 target_link_libraries(sdl ${SDL2_ALL_LIBS} m)
 
-foreach(file "arial.ttf" "drap.png")
+foreach(file "arial.ttf" "drap.png" "ronan.jpeg" "bombe.png")
   file(COPY ${file} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 endforeach(file)

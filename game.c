@@ -219,3 +219,16 @@ void reveal_case(game g, int i, int j) {
         }
     }
 }
+
+/* Return True if the player has won the Game, False else */
+bool has_won(game g) {
+    assert(g!=NULL);
+    for (uint i=0 ; i<g->nb_rows ; i++) {
+        for (uint j=0 ; j<g->nb_cols ; j++) {
+            if ((get_number_bombs_around(g,i,j)==-1 && !is_flagged(g,i,j)) || (get_number_bombs_around(g,i,j)!=-1 && !is_shown(g,i,j))) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
