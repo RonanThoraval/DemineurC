@@ -52,8 +52,8 @@ Env *init(SDL_Window *win, SDL_Renderer *ren, int argc, char *argv[]) {
   env->ronan = IMG_LoadTexture(ren,RONAN);
   if (!env->ronan) ERROR("IMG_LoadTexture: %s\n", RONAN);
 
-  env->nb_cols=20;
-  env->nb_rows=10;
+  env->nb_cols=8;
+  env->nb_rows=8;
   env->nb_bombs=10;
   env->first_click=false;
   env->square_size=fmin(w/env->nb_cols,h/env->nb_rows);
@@ -79,6 +79,42 @@ Env *init(SDL_Window *win, SDL_Renderer *ren, int argc, char *argv[]) {
   return env;
 }
 
+/************ RENDER TEXT ***********************/
+
+void render_text(SDL_Window *win, SDL_Renderer *ren, Env *env, uint color, char * texte, uint x, uint y, uint text_width, uint text_height) {
+  SDL_Rect rect;
+  int w, h;
+  SDL_GetWindowSize(win, &w, &h);
+
+  TTF_Font* font = TTF_OpenFont(FONT, env->square_size);
+  if (!font) ERROR("TTF_OpenFont: %s\n", FONT);
+  TTF_SetFontStyle(font, TTF_STYLE_NORMAL);
+  SDL_Surface* surf = TTF_RenderText_Blended(font, texte, env->colors[color]);
+  env->text = SDL_CreateTextureFromSurface(ren, surf);
+  SDL_FreeSurface(surf);
+  TTF_CloseFont(font);
+
+  SDL_QueryTexture(env->text, NULL, NULL, &rect.w, &rect.h);
+  if (text_width!=0 && text_height!=0) {
+    rect.w= text_width;
+    rect.h= text_height;
+  }
+  rect.x =  x - rect.w/2  ;
+  rect.y =  y - rect.h/2 ;
+  SDL_RenderCopy(ren, env->text, NULL, &rect);
+}
+
+/************ RENDER IMAGE ***************/
+
+void render_image(SDL_Renderer *ren, SDL_Texture * image, uint x, uint y, uint image_width, uint image_height) {
+  SDL_Rect rect;
+  rect.w=image_width;
+  rect.h=image_height;
+  rect.x = x;
+  rect.y = y;
+  SDL_RenderCopy(ren, image, NULL, &rect);
+}
+
 
 /**************** RENDER STATUS BAR ******************/
 
@@ -93,26 +129,12 @@ void render_bar(SDL_Window *win, SDL_Renderer *ren, Env *env) {
   SDL_RenderDrawLine(ren,3*w/4,h-env->bar_size+1,3*w/4,h-1);
   SDL_RenderDrawLine(ren,w-1,h-env->bar_size+1,w-1,h-1);
 
-
-  TTF_Font* font = TTF_OpenFont(FONT, env->square_size);
-  if (!font) ERROR("TTF_OpenFont: %s\n", FONT);
-  TTF_SetFontStyle(font, TTF_STYLE_NORMAL);
-  SDL_Surface* surf = TTF_RenderText_Blended(font, "Nouvelle Partie", env->colors[0]);
-  env->text = SDL_CreateTextureFromSurface(ren, surf);
-  SDL_FreeSurface(surf);
-  TTF_CloseFont(font);
-
-  SDL_QueryTexture(env->text, NULL, NULL, &rect.w, &rect.h);
-  rect.w =3*w/16;
-  rect.h = env->bar_size/2;
-  rect.x =  7*w/8 - rect.w/2  ;
-  rect.y =  h-(env->bar_size/2) - rect.h/2 ;
-  SDL_RenderCopy(ren, env->text, NULL, &rect);
-  /* nouvelle partie */
+  render_text(win,ren,env,0,"Nouvelle Partie",7*w/8,h-(env->bar_size)/2,3*w/16,env->bar_size/2);
 }
 
 
-/* **************************************************************** */
+
+/* **************************** RENDER ************************************ */
 
 void render(SDL_Window *win, SDL_Renderer *ren, Env *env) {
     SDL_Rect rect;
@@ -126,18 +148,7 @@ void render(SDL_Window *win, SDL_Renderer *ren, Env *env) {
 
     if (env->winning) {
       SDL_RenderCopy(ren, env->ronan, NULL, NULL);
-      TTF_Font* font = TTF_OpenFont(FONT, env->square_size);
-      if (!font) ERROR("TTF_OpenFont: %s\n", FONT);
-      TTF_SetFontStyle(font, TTF_STYLE_NORMAL);
-      SDL_Surface* surf = TTF_RenderText_Blended(font, "LOL BRAVO", env->colors[7]);
-      env->text = SDL_CreateTextureFromSurface(ren, surf);
-      SDL_FreeSurface(surf);
-      TTF_CloseFont(font);
-
-      SDL_QueryTexture(env->text, NULL, NULL, &rect.w, &rect.h);
-      rect.x =  w/2 - rect.w/2  ;
-      rect.y =  h/2 - rect.h/2 ;
-      SDL_RenderCopy(ren, env->text, NULL, &rect);
+      render_text(win,ren,env,0,"LOL BRAVO",w/2,h/2,0,0);
       return;
     }
 
@@ -180,45 +191,21 @@ void render(SDL_Window *win, SDL_Renderer *ren, Env *env) {
               SDL_RenderFillRect(ren,&rect);
             }
             if (is_shown(env->g,i,j) && get_number_bombs_around(env->g,i,j)>0) {
-              TTF_Font* font = TTF_OpenFont(FONT, env->square_size);
-              if (!font) ERROR("TTF_OpenFont: %s\n", FONT);
-              TTF_SetFontStyle(font, TTF_STYLE_NORMAL);
               char s[2];
               sprintf(s, "%u", get_number_bombs_around(env->g,i,j));
-              SDL_Surface* surf = TTF_RenderText_Blended(font, s, env->colors[get_number_bombs_around(env->g,i,j)-1]);
-              env->text = SDL_CreateTextureFromSurface(ren, surf);
-              SDL_FreeSurface(surf);
-              TTF_CloseFont(font);
+              uint x = j*env->square_size + env->square_size/2;
+              uint y = i*env->square_size + env->square_size/2;
+              render_text(win,ren,env,get_number_bombs_around(env->g,i,j)-1,s,x,y,0,0);
 
-              SDL_QueryTexture(env->text, NULL, NULL, &rect.w, &rect.h);
-              rect.x =  j*env->square_size + env->square_size/2 - rect.w/2  ;
-              rect.y =  i*env->square_size + env->square_size/2 - rect.h/2 ;
-              SDL_RenderCopy(ren, env->text, NULL, &rect);
             }
-            if (is_flagged(env->g,i,j)) {
-              rect.w=env->square_size;
-              rect.h=env->square_size;
-              rect.x = j*env->square_size;
-              rect.y = i*env->square_size;
-              SDL_RenderCopy(ren, env->flag, NULL, &rect);
+            if (env->losing && get_number_bombs_around(env->g,i,j)==-1) {
+              render_image(ren,env->bomb,j*env->square_size,i*env->square_size,env->square_size,env->square_size);
+            }
+            if (!env->losing && is_flagged(env->g,i,j)) {
+              render_image(ren,env->flag,j*env->square_size,i*env->square_size,env->square_size,env->square_size);
             }
         }
     }
-    if(env->losing) {
-      for (uint i=0 ; i<get_nb_rows(env->g) ; i++) {
-        for (uint j=0 ; j<get_nb_cols(env->g) ; j++) {
-          if (get_number_bombs_around(env->g,i,j)==-1) {
-            rect.w=env->square_size;
-            rect.h=env->square_size;
-            rect.x=j*env->square_size;
-            rect.y=i*env->square_size;
-            SDL_RenderCopy(ren,env->bomb,NULL,&rect);
-          }
-        }
-      }
-    }
-
-
 }
 
 void set_not_changed(Env *env) {
