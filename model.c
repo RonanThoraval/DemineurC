@@ -240,6 +240,9 @@ bool process(SDL_Window *win, SDL_Renderer *ren, Env *env, SDL_Event *e) {
         }
         return false;
       }
+      if (env->losing) {
+        return false;
+      }
       if (e->button.button==SDL_BUTTON_LEFT) {
           /* If first click, init game */
           if (env->first_click==false) {
