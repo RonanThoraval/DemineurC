@@ -54,7 +54,7 @@ Env *init(SDL_Window *win, SDL_Renderer *ren, int argc, char *argv[]) {
 
   env->nb_cols=8;
   env->nb_rows=8;
-  env->nb_bombs=20;
+  env->nb_bombs=10;
   env->first_click=false;
   env->square_size=fmin(w/env->nb_cols,h/env->nb_rows);
   env->has_changed=true;
