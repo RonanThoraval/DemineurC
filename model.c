@@ -54,27 +54,27 @@ Env *init(SDL_Window *win, SDL_Renderer *ren, int argc, char *argv[]) {
 
   env->nb_cols=8;
   env->nb_rows=8;
-  env->nb_bombs=10;
+  env->nb_bombs=20;
   env->first_click=false;
   env->square_size=fmin(w/env->nb_cols,h/env->nb_rows);
   env->has_changed=true;
   env->winning=false;
 
-  SDL_Color bleu={0,0,200,125};
-  SDL_Color noir={255,255,255,125};
-  SDL_Color jaune={200,200,0,255};
-  SDL_Color rouge={150,0,0,125};
-  SDL_Color violet={200,0,200,125};
-  SDL_Color vert={0,200,0,125};
-  SDL_Color cyan={0,125,200,125};
-  SDL_Color gris={125,125,125,255};
+  SDL_Color bleu={0,0,200,200};
+  SDL_Color noir={255,255,255,200};
+  SDL_Color jaune={200,200,0,200};
+  SDL_Color rouge={150,0,0,200};
+  SDL_Color violet={200,0,200,200};
+  SDL_Color vert={0,125,0,255};
+  SDL_Color cyan={0,125,200,200};
+  SDL_Color gris={125,125,125,200};
   env->colors[0]=bleu;
-  env->colors[6]=vert;
+  env->colors[6]=cyan;
   env->colors[2]=rouge;
   env->colors[3]=jaune;
   env->colors[4]=gris;
   env->colors[5]=violet;
-  env->colors[1]=cyan;
+  env->colors[1]=vert;
   env->colors[7]=noir;
   return env;
 }
