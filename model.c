@@ -146,6 +146,7 @@ void render_bar(SDL_Window *win, SDL_Renderer *ren, Env *env) {
   render_text(win,ren,env,0,nb_bomb,env->bar_size*7/2,env->nb_rows*env->square_size+env->bar_size/2,0,0,env->bar_size);
 }
 
+/************ RENDER MENU ******************/
 
 void render_menu(SDL_Window *win, SDL_Renderer *ren, Env *env){
   int w, h;
@@ -345,6 +346,8 @@ void clean(SDL_Window *win, SDL_Renderer *ren, Env *env) {
   }
   SDL_DestroyTexture(env->text);
   SDL_DestroyTexture(env->flag);
+  SDL_DestroyTexture(env->bomb);
+  SDL_DestroyTexture(env->ronan);
 
   free(env);
 }
