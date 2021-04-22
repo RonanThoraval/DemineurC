@@ -127,12 +127,14 @@ void render_bar(SDL_Window *win, SDL_Renderer *ren, Env *env) {
   SDL_GetWindowSize(win, &w, &h);
 
   SDL_SetRenderDrawColor(ren, 0, 0, 0, SDL_ALPHA_OPAQUE);
-  SDL_RenderDrawLine(ren,3*w/4,h-env->bar_size+1,w-1,h-env->bar_size+1);
-  SDL_RenderDrawLine(ren,3*w/4,h-1,w-1,h-1);
-  SDL_RenderDrawLine(ren,3*w/4,h-env->bar_size+1,3*w/4,h-1);
+  SDL_RenderDrawLine(ren,w/2,h-env->bar_size+1,w-1,h-env->bar_size+1);
+  SDL_RenderDrawLine(ren,w/2,h-1,w-1,h-1);
+  SDL_RenderDrawLine(ren,w/2,h-env->bar_size+1,w/2,h-1);
   SDL_RenderDrawLine(ren,w-1,h-env->bar_size+1,w-1,h-1);
+  SDL_RenderDrawLine(ren,3*w/4,h-env->bar_size+1,3*w/4,h-1);
 
-  render_text(win,ren,env,0,"Nouvelle Partie",7*w/8,h-(env->bar_size)/2,3*w/16,env->bar_size/2,env->square_size);
+  render_text(win,ren,env,0,"Nouvelle Partie",7*w/8,h-(env->bar_size)/2,3*w/16,env->bar_size/2,env->bar_size);
+  render_text(win,ren,env,0,"Menu",5*w/8,h-env->bar_size/2,2*w/16,env->bar_size/2,env->bar_size);
 
   render_image(ren, env->flag,5,h-env->bar_size+1, env->bar_size - 5, env->bar_size - 5);
   render_image(ren,env->bomb,env->bar_size*2+5,h-env->bar_size+1, env->bar_size-5, env->bar_size-5);
@@ -292,6 +294,13 @@ bool process(SDL_Window *win, SDL_Renderer *ren, Env *env, SDL_Event *e) {
           env->losing=false;
           game_delete(env->g);
           env->g=NULL;
+        } else if (mouse.x>=w/2 && mouse.y>=h-env->bar_size) {
+          env->first_click=false;
+          env->winning=false;
+          env->losing=false;
+          game_delete(env->g);
+          env->g=NULL;
+          env->menu=true;
         }
         return false;
       }
