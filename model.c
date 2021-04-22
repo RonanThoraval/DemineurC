@@ -70,7 +70,7 @@ Env *init(SDL_Window *win, SDL_Renderer *ren, int argc, char *argv[]) {
   SDL_Color violet={200,0,200,200};
   SDL_Color vert={0,125,0,255};
   SDL_Color cyan={0,125,200,200};
-  SDL_Color gris={125,125,125,200};
+  SDL_Color gris={0,0,0,200};
   env->colors[0]=bleu;
   env->colors[6]=cyan;
   env->colors[2]=rouge;
