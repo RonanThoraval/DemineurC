@@ -197,6 +197,9 @@ void remove_flag(game g, int i, int j) {
 }
 
 int get_nb_flags(game g){
+    if (g==NULL) {
+        return 0;
+    }
 	return g->nb_flags;
 }
 

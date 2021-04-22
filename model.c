@@ -86,7 +86,7 @@ void render_text(SDL_Window *win, SDL_Renderer *ren, Env *env, uint color, char 
   int w, h;
   SDL_GetWindowSize(win, &w, &h);
 
-  TTF_Font* font = TTF_OpenFont(FONT, env->square_size);
+  TTF_Font* font = TTF_OpenFont(FONT, 2*env->square_size/3);
   if (!font) ERROR("TTF_OpenFont: %s\n", FONT);
   TTF_SetFontStyle(font, TTF_STYLE_NORMAL);
   SDL_Surface* surf = TTF_RenderText_Blended(font, texte, env->colors[color]);
@@ -132,12 +132,13 @@ void render_bar(SDL_Window *win, SDL_Renderer *ren, Env *env) {
   render_text(win,ren,env,0,"Nouvelle Partie",7*w/8,h-(env->bar_size)/2,3*w/16,env->bar_size/2);
 
   render_image(ren, env->flag,5,h-env->bar_size+1, env->bar_size - 5, env->bar_size - 5);
-  /*char nb_bomb[2];
-  sprintf(nb_bomb, "%u", get_nb_bombs(env->g));
-  char nb_flag[2];
+  render_image(ren,env->bomb,env->bar_size*2+5,h-env->bar_size+1, env->bar_size-5, env->bar_size-5);
+  char nb_bomb[3];
+  sprintf(nb_bomb, "%u", env->nb_bombs);
+  char nb_flag[3];
   sprintf(nb_flag, "%u", get_nb_flags(env->g));
-  render_text(win,ren,env,2,nb_flag,env->bar_size+5,env->bar_size,0,0);
- */
+  render_text(win,ren,env,0,nb_flag,env->bar_size*3/2,env->nb_rows*env->square_size+env->square_size/2,0,0);
+  render_text(win,ren,env,0,nb_bomb,env->bar_size*7/2,env->nb_rows*env->square_size+env->square_size/2,0,0);
 }
 
 
