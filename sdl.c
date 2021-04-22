@@ -27,6 +27,8 @@ int main(int argc, char* argv[]) {
   if (!ren) ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_SOFTWARE);
   if (!ren) ERROR("Error: SDL_CreateRenderer (%s)", SDL_GetError());
 
+
+  
   /* initialize your environment */
   Env* env = init(win, ren, argc, argv);
 
