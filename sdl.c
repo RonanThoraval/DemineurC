@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
     
     if(get_changed(env)) {
       /* render all what you want */
-      SDL_SetRenderDrawColor(ren, 0xA0, 0xA0, 0xA0, 0xFF);
+      SDL_SetRenderDrawColor(ren,190,190,190,255);
       SDL_RenderClear(ren);
       render(win, ren, env);
       SDL_RenderPresent(ren);

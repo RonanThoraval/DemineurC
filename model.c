@@ -191,6 +191,12 @@ void render(SDL_Window *win, SDL_Renderer *ren, Env *env) {
               rect.h=env->square_size-1;
               SDL_RenderFillRect(ren,&rect);
             } else {
+              SDL_SetRenderDrawColor(ren,210,210,210,255);
+              rect.x=j*env->square_size+1;
+              rect.y=i*env->square_size+1;
+              rect.w=env->square_size-2;
+              rect.h=env->square_size-2;
+              SDL_RenderFillRect(ren,&rect);
               SDL_SetRenderDrawColor(ren,190,190,190,255);
               rect.x=j*env->square_size+1;
               rect.y=i*env->square_size+1;
