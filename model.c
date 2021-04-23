@@ -18,22 +18,24 @@
 
 struct Env_t {
   game g;
-  uint square_size;
-  uint bar_size;
+  uint w; //width of window
+  uint h; //height of window
+  uint square_size; // Size of a square
+  uint bar_size; // Size of the status bar
   SDL_Texture *text;
   SDL_Texture *flag;
   SDL_Texture *bomb;
   SDL_Texture *ronan;
-  SDL_Color colors[8];
+  SDL_Color colors[8]; // Tab of the various colors used
   uint nb_rows;
   uint nb_cols;
   uint nb_bombs;
-  bool has_changed;
+  bool has_changed; //True if the player has clicked, or the window has changed size
   bool first_click; //True if there has been a first click, false else
   bool winning; //True if the game is won
   bool losing; //True if the game is lost
-  bool menu;
-  bool choose_parameters;
+  bool menu; // True if the player is on the menu
+  bool choose_parameters; // If true, the player can choose parameters of game
 };
 
 /* **************************************************************** */
@@ -45,6 +47,8 @@ Env *init(SDL_Window *win, SDL_Renderer *ren, int argc, char *argv[]) {
   /* get current window size */
   int w, h;
   SDL_GetWindowSize(win, &w, &h);
+  env->w=w;
+  env->h=h;
 
   env->flag = IMG_LoadTexture(ren, FLAG);
   if (!env->flag) ERROR("IMG_LoadTexture: %s\n", FLAG);
@@ -59,8 +63,8 @@ Env *init(SDL_Window *win, SDL_Renderer *ren, int argc, char *argv[]) {
   env->nb_rows=8;
   env->nb_bombs=10;
   env->first_click=false;
-  env->bar_size = fmin(h / 10, w / 7);
-  env->square_size=fmin(w/env->nb_cols,(h-env->bar_size)/env->nb_rows);
+  env->bar_size = fmin(env->h / 10, env->w / 7);
+  env->square_size=fmin(env->w/env->nb_cols,(env->h-env->bar_size)/env->nb_rows);
   env->has_changed=true;
   env->winning=false;
   env->choose_parameters=false;
@@ -88,8 +92,6 @@ Env *init(SDL_Window *win, SDL_Renderer *ren, int argc, char *argv[]) {
 
 void render_text(SDL_Window *win, SDL_Renderer *ren, Env *env, uint color, char * texte, uint x, uint y, uint text_width, uint text_height, uint text_size) {
   SDL_Rect rect;
-  int w, h;
-  SDL_GetWindowSize(win, &w, &h);
 
   TTF_Font* font = TTF_OpenFont(FONT, text_size);
   if (!font) ERROR("TTF_OpenFont: %s\n", FONT);
@@ -124,21 +126,19 @@ void render_image(SDL_Renderer *ren, SDL_Texture * image, uint x, uint y, uint i
 /**************** RENDER STATUS BAR ******************/
 
 void render_bar(SDL_Window *win, SDL_Renderer *ren, Env *env) {
-  int w,h;
-  SDL_GetWindowSize(win, &w, &h);
 
   SDL_SetRenderDrawColor(ren, 0, 0, 0, SDL_ALPHA_OPAQUE);
-  SDL_RenderDrawLine(ren,w/2,h-env->bar_size+1,w-1,h-env->bar_size+1);
-  SDL_RenderDrawLine(ren,w/2,h-1,w-1,h-1);
-  SDL_RenderDrawLine(ren,w/2,h-env->bar_size+1,w/2,h-1);
-  SDL_RenderDrawLine(ren,w-1,h-env->bar_size+1,w-1,h-1);
-  SDL_RenderDrawLine(ren,3*w/4,h-env->bar_size+1,3*w/4,h-1);
+  SDL_RenderDrawLine(ren,env->w/2,env->h-env->bar_size+1,env->w-1,env->h-env->bar_size+1);
+  SDL_RenderDrawLine(ren,env->w/2,env->h-1,env->w-1,env->h-1);
+  SDL_RenderDrawLine(ren,env->w/2,env->h-env->bar_size+1,env->w/2,env->h-1);
+  SDL_RenderDrawLine(ren,env->w-1,env->h-env->bar_size+1,env->w-1,env->h-1);
+  SDL_RenderDrawLine(ren,3*env->w/4,env->h-env->bar_size+1,3*env->w/4,env->h-1);
 
-  render_text(win,ren,env,0,"Nouvelle Partie",7*w/8,h-(env->bar_size)/2,3*w/16,env->bar_size/2,env->bar_size);
-  render_text(win,ren,env,0,"Menu",5*w/8,h-env->bar_size/2,2*w/16,env->bar_size/2,env->bar_size);
+  render_text(win,ren,env,0,"Nouvelle Partie",7*env->w/8,env->h-(env->bar_size)/2,3*env->w/16,env->bar_size/2,env->bar_size);
+  render_text(win,ren,env,0,"Menu",5*env->w/8,env->h-env->bar_size/2,2*env->w/16,env->bar_size/2,env->bar_size);
 
-  render_image(ren, env->flag,5,h-env->bar_size+1, env->bar_size - 5, env->bar_size - 5);
-  render_image(ren,env->bomb,env->bar_size*2+5,h-env->bar_size+1, env->bar_size-5, env->bar_size-5);
+  render_image(ren, env->flag,5,env->h-env->bar_size+1, env->bar_size - 5, env->bar_size - 5);
+  render_image(ren,env->bomb,env->bar_size*2+5,env->h-env->bar_size+1, env->bar_size-5, env->bar_size-5);
   char nb_bomb[3];
   sprintf(nb_bomb, "%u", env->nb_bombs);
   char nb_flag[3];
@@ -150,35 +150,31 @@ void render_bar(SDL_Window *win, SDL_Renderer *ren, Env *env) {
 /************ RENDER MENU ******************/
 
 void render_menu(SDL_Window *win, SDL_Renderer *ren, Env *env){
-  int w, h;
-  SDL_GetWindowSize(win, &w, &h);
 
   SDL_SetRenderDrawColor(ren, 0, 0, 0, SDL_ALPHA_OPAQUE);
-  SDL_RenderDrawLine(ren,w/2,0,w/2,h);
-  SDL_RenderDrawLine(ren,0,h/2,w,h/2);
+  SDL_RenderDrawLine(ren,env->w/2,0,env->w/2,env->h);
+  SDL_RenderDrawLine(ren,0,env->h/2,env->w,env->h/2);
 
-  render_text(win,ren,env,0,"Facile : 8x8", w/4,h/4,0,0,w/20);
-  render_text(win,ren,env,0,"Moyen : 13x13", 3*w/4,h/4,0,0,w/20);
-  render_text(win,ren,env,0,"Difficile : 17x17", w/4,3*h/4,0,0,w/20);
+  render_text(win,ren,env,0,"Facile : 8x8", env->w/4,env->h/4,0,0,fmin(env->w/20,env->h/20));
+  render_text(win,ren,env,0,"Moyen : 13x13", 3*env->w/4,env->h/4,0,0,fmin(env->w/20,env->h/20));
+  render_text(win,ren,env,0,"Difficile : 17x17", env->w/4,3*env->h/4,0,0,fmin(env->w/20,env->h/20));
   if (!env->choose_parameters) {
-    render_text(win,ren,env,0,"Choisir les variables", 3*w/4,3*h/4,0,0,w/20);
+    render_text(win,ren,env,0,"Choisir les variables", 3*env->w/4,3*env->h/4,0,0,fmin(env->w/20,env->h/20));
   }
 }
 
 void render_parameters(SDL_Window *win, SDL_Renderer *ren, Env *env) {
-  int w, h;
-  SDL_GetWindowSize(win, &w, &h);
 
-  SDL_RenderDrawLine(ren,w/2,5*h/8,w,5*h/8);
-  SDL_RenderDrawLine(ren,w/2,6*h/8,w,6*h/8);
-  SDL_RenderDrawLine(ren,w/2,7*h/8,w,7*h/8);
-  SDL_RenderDrawLine(ren,3*w/4,h/2,3*w/4,h-h/8);
-  SDL_RenderDrawLine(ren,10*w/12,h/2,10*w/12,h-h/8);
-  SDL_RenderDrawLine(ren,11*w/12,h/2,11*w/12,h-h/8);
-  render_text(win,ren,env,0,"Lignes : ",w/2+w/8,h/2+h/16,0,0,fmin(h/24,w/24));
-  render_text(win,ren,env,0,"Colonnes : ",w/2+w/8,5*h/8+h/16,0,0,fmin(h/24,w/24));
-  render_text(win,ren,env,0,"Bombes : ",w/2+w/8,6*h/8+h/16,0,0,fmin(h/24,w/24));
-  render_text(win,ren,env,0,"OK",3*w/4,7*h/8+h/16,0,0,fmin(h/24,w/24));
+  SDL_RenderDrawLine(ren,env->w/2,5*env->h/8,env->w,5*env->h/8);
+  SDL_RenderDrawLine(ren,env->w/2,6*env->h/8,env->w,6*env->h/8);
+  SDL_RenderDrawLine(ren,env->w/2,7*env->h/8,env->w,7*env->h/8);
+  SDL_RenderDrawLine(ren,3*env->w/4,env->h/2,3*env->w/4,env->h-env->h/8);
+  SDL_RenderDrawLine(ren,10*env->w/12,env->h/2,10*env->w/12,env->h-env->h/8);
+  SDL_RenderDrawLine(ren,11*env->w/12,env->h/2,11*env->w/12,env->h-env->h/8);
+  render_text(win,ren,env,0,"Lignes : ",env->w/2+env->w/8,env->h/2+env->h/16,0,0,fmin(env->h/24,env->w/24));
+  render_text(win,ren,env,0,"Colonnes : ",env->w/2+env->w/8,5*env->h/8+env->h/16,0,0,fmin(env->h/24,env->w/24));
+  render_text(win,ren,env,0,"Bombes : ",env->w/2+env->w/8,6*env->h/8+env->h/16,0,0,fmin(env->h/24,env->w/24));
+  render_text(win,ren,env,0,"OK",3*env->w/4,7*env->h/8+env->h/16,0,0,fmin(env->h/24,env->w/24));
 
   char nb_rows[3];
   char nb_cols[3];
@@ -186,12 +182,12 @@ void render_parameters(SDL_Window *win, SDL_Renderer *ren, Env *env) {
   sprintf(nb_rows,"%u",env->nb_rows);
   sprintf(nb_cols,"%u",env->nb_cols);
   sprintf(nb_bombs,"%u",env->nb_bombs);
-  render_text(win,ren,env,0,nb_rows,10*w/12+w/24,4*h/8+h/16,0,0,fmin(h/24,w/24));
-  render_text(win,ren,env,0,nb_cols,10*w/12+w/24,5*h/8+h/16,0,0,fmin(h/24,w/24));
-  render_text(win,ren,env,0,nb_bombs,10*w/12+w/24,6*h/8+h/16,0,0,fmin(h/24,w/24));
+  render_text(win,ren,env,0,nb_rows,10*env->w/12+env->w/24,4*env->h/8+env->h/16,0,0,fmin(env->h/24,env->w/24));
+  render_text(win,ren,env,0,nb_cols,10*env->w/12+env->w/24,5*env->h/8+env->h/16,0,0,fmin(env->h/24,env->w/24));
+  render_text(win,ren,env,0,nb_bombs,10*env->w/12+env->w/24,6*env->h/8+env->h/16,0,0,fmin(env->h/24,env->w/24));
   for (uint i=1 ; i<=3 ; i++) {
-    render_text(win,ren,env,0,"+",11*w/12+w/24,(3+i)*h/8+h/16,0,0,fmin(h/24,w/24));
-    render_text(win,ren,env,0,"-",9*w/12+w/24,(3+i)*h/8+h/16,0,0,fmin(h/24,w/24));
+    render_text(win,ren,env,0,"+",11*env->w/12+env->w/24,(3+i)*env->h/8+env->h/16,0,0,fmin(env->h/24,env->w/24));
+    render_text(win,ren,env,0,"-",9*env->w/12+env->w/24,(3+i)*env->h/8+env->h/16,0,0,fmin(env->h/24,env->w/24));
   }
   
 }
@@ -207,18 +203,15 @@ void render(SDL_Window *win, SDL_Renderer *ren, Env *env) {
     }
     return;
   }
-    SDL_Rect rect;
-     //get current window size 
-    int w, h;
-    SDL_GetWindowSize(win, &w, &h);
+  SDL_Rect rect;
 
-    env->bar_size = fmin(h / 10, w / 7);
-    env->square_size=fmin(w/env->nb_cols,(h-env->bar_size)/env->nb_rows);
+    env->bar_size = fmin(env->h / 10, env->w / 7);
+    env->square_size=fmin(env->w/env->nb_cols,(env->h-env->bar_size)/env->nb_rows);
     render_bar(win,ren,env);
 
     if (env->winning) {
-      render_image(ren, env->ronan,0,0,w,h-env->bar_size);
-      render_text(win,ren,env,0,"Ronan applaudit.",w/2,h/2,0,0,w/10);
+      render_image(ren, env->ronan,0,0,env->w,env->h-env->bar_size);
+      render_text(win,ren,env,0,"Ronan applaudit.",env->w/2,env->h/2,0,0,env->w/10);
       return;
     }
 
@@ -280,7 +273,7 @@ void render(SDL_Window *win, SDL_Renderer *ren, Env *env) {
         }
     }
     if (env->losing) {
-      render_text(win,ren,env,2,"Perdu", w/2,h/2,0,0,w/10);
+      render_text(win,ren,env,2,"Perdu",env-> w/2,env->h/2,0,0,env->w/10);
     }
 }
 
@@ -293,9 +286,7 @@ bool get_changed(Env *env) {
 }
 
 /* Choose parameters in function of the click on the menu */
-void game_from_menu(SDL_Window *win, Env* env,uint width, uint height, float x, float y) {
-  int w, h;
-  SDL_GetWindowSize(win, &w, &h);
+void game_from_menu( Env* env,uint width, uint height, float x, float y) {
   if (x<width/2 && y<height/2) {
     env->nb_rows=8;
     env->nb_cols=8;
@@ -315,6 +306,8 @@ void game_from_menu(SDL_Window *win, Env* env,uint width, uint height, float x, 
     env->choose_parameters=false;
     env->menu=false;
   } else if (x>width/2 && y>height/2) {
+    uint w=env->w;
+    uint h=env->h;
     if (env->choose_parameters) {
       if (x>w/2 && y>7*h/8) {
         env->choose_parameters=false;
@@ -347,6 +340,11 @@ void game_from_menu(SDL_Window *win, Env* env,uint width, uint height, float x, 
 bool process(SDL_Window *win, SDL_Renderer *ren, Env *env, SDL_Event *e) {
   int w, h;
   SDL_GetWindowSize(win, &w, &h);
+  if (env->w!=w || env->h !=h) {
+    env->has_changed=true;
+    env->w=w;
+    env->h=h;
+  }
   if (e->type == SDL_QUIT || (e->type == SDL_KEYDOWN && e->key.keysym.sym == SDLK_ESCAPE)) {
     return true;
   }
@@ -357,18 +355,18 @@ bool process(SDL_Window *win, SDL_Renderer *ren, Env *env, SDL_Event *e) {
       uint i = (mouse.y - mouse.y % env->square_size) / env->square_size;
       uint j = (mouse.x - mouse.x % env->square_size) / env->square_size;
       if (env->menu) {
-        game_from_menu(win,env,w,h, mouse.x, mouse.y);
+        game_from_menu(env,env->w,env->h, mouse.x, mouse.y);
         return false;
       }
       if (i>=env->nb_rows || j>=env->nb_cols) {
         /* New game */
-        if (mouse.x>=3*w/4 && mouse.y>=h-env->bar_size) {
+        if (mouse.x>=3*env->w/4 && mouse.y>=env->h-env->bar_size) {
           env->first_click=false;
           env->winning=false;
           env->losing=false;
           game_delete(env->g);
           env->g=NULL;
-        } else if (mouse.x>=w/2 && mouse.y>=h-env->bar_size) {
+        } else if (mouse.x>=env->w/2 && mouse.y>=env->h-env->bar_size) {
           env->first_click=false;
           env->winning=false;
           env->losing=false;
@@ -385,7 +383,6 @@ bool process(SDL_Window *win, SDL_Renderer *ren, Env *env, SDL_Event *e) {
           /* If first click, init game */
           if (env->first_click==false) {
             env->first_click=true;
-            printf("First click : %u %u\n",i,j);
             game g= game_init(env->nb_rows,env->nb_cols,env->nb_bombs,i,j);
             env->g=g;
           }
