@@ -166,7 +166,9 @@ game game_init(int nb_rows, int nb_cols, int nb_bombs, int x , int y) {
 }
 
 void game_delete(game g) {
-    assert(g!=NULL);
+    if (g==NULL) {
+        return;
+    }
     for (int i=0 ; i<get_nb_rows(g) ; i++) {
         if (g->grid[i]!=NULL) {
             free(g->grid[i]);

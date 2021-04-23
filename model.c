@@ -33,6 +33,7 @@ struct Env_t {
   bool winning; //True if the game is won
   bool losing; //True if the game is lost
   bool menu;
+  bool choose_parameters;
 };
 
 /* **************************************************************** */
@@ -62,6 +63,7 @@ Env *init(SDL_Window *win, SDL_Renderer *ren, int argc, char *argv[]) {
   env->square_size=fmin(w/env->nb_cols,(h-env->bar_size)/env->nb_rows);
   env->has_changed=true;
   env->winning=false;
+  env->choose_parameters=false;
 
   SDL_Color bleu={0,0,200,200};
   SDL_Color noir={255,255,255,200};
@@ -122,7 +124,6 @@ void render_image(SDL_Renderer *ren, SDL_Texture * image, uint x, uint y, uint i
 /**************** RENDER STATUS BAR ******************/
 
 void render_bar(SDL_Window *win, SDL_Renderer *ren, Env *env) {
-  SDL_Rect rect;
   int w,h;
   SDL_GetWindowSize(win, &w, &h);
 
@@ -159,6 +160,36 @@ void render_menu(SDL_Window *win, SDL_Renderer *ren, Env *env){
   render_text(win,ren,env,0,"Facile : 8x8", w/4,h/4,0,0,w/20);
   render_text(win,ren,env,0,"Moyen : 13x13", 3*w/4,h/4,0,0,w/20);
   render_text(win,ren,env,0,"Difficile : 17x17", w/4,3*h/4,0,0,w/20);
+  if (!env->choose_parameters) {
+    render_text(win,ren,env,0,"Choisir les variables", 3*w/4,3*h/4,0,0,w/20);
+  }
+}
+
+void render_parameters(SDL_Window *win, SDL_Renderer *ren, Env *env) {
+  int w, h;
+  SDL_GetWindowSize(win, &w, &h);
+
+  SDL_RenderDrawLine(ren,w/2,5*h/8,w,5*h/8);
+  SDL_RenderDrawLine(ren,w/2,6*h/8,w,6*h/8);
+  SDL_RenderDrawLine(ren,w/2,7*h/8,w,7*h/8);
+  render_text(win,ren,env,0,"Lignes : ",w/2+w/8,h/2+h/16,0,0,h/24);
+  render_text(win,ren,env,0,"Colonnes : ",w/2+w/8,5*h/8+h/16,0,0,h/24);
+  render_text(win,ren,env,0,"Bombes : ",w/2+w/8,6*h/8+h/16,0,0,h/24);
+  render_text(win,ren,env,0,"OK",3*w/4,7*h/8+h/16,0,0,h/24);
+
+  char nb_rows[3];
+  char nb_cols[3];
+  char nb_bombs[3];
+  sprintf(nb_rows,"%u",env->nb_rows);
+  sprintf(nb_cols,"%u",env->nb_cols);
+  sprintf(nb_bombs,"%u",env->nb_bombs);
+  render_text(win,ren,env,0,nb_rows,10*w/12+w/24,4*h/8+h/16,0,0,h/24);
+  render_text(win,ren,env,0,nb_cols,10*w/12+w/24,5*h/8+h/16,0,0,h/24);
+  render_text(win,ren,env,0,nb_bombs,10*w/12+w/24,6*h/8+h/16,0,0,h/24);
+  for (uint i=1 ; i<=3 ; i++) {
+    render_text(win,ren,env,0,"+",11*w/12+w/24,(3+i)*h/8+h/16,0,0,h/24);
+    render_text(win,ren,env,0,"-",9*w/12+w/24,(3+i)*h/8+h/16,0,0,h/24);
+  }
   
 }
 
@@ -168,6 +199,9 @@ void render_menu(SDL_Window *win, SDL_Renderer *ren, Env *env){
 void render(SDL_Window *win, SDL_Renderer *ren, Env *env) {
   if (env->menu) {
     render_menu(win,ren,env);
+    if (env->choose_parameters) {
+      render_parameters(win,ren,env);
+    }
     return;
   }
     SDL_Rect rect;
@@ -256,19 +290,52 @@ bool get_changed(Env *env) {
 }
 
 /* Choose parameters in function of the click on the menu */
-void game_from_menu(Env* env,uint width, uint height, float x, float y) {
+void game_from_menu(SDL_Window *win, Env* env,uint width, uint height, float x, float y) {
+  int w, h;
+  SDL_GetWindowSize(win, &w, &h);
   if (x<width/2 && y<height/2) {
     env->nb_rows=8;
     env->nb_cols=8;
     env->nb_bombs=10;
+    env->choose_parameters=false;
+    env->menu=false;
   } else if (x>width/2 && y<height/2) {
     env->nb_rows=13;
     env->nb_cols=13;
     env->nb_bombs=30;
+    env->choose_parameters=false;
+    env->menu=false;
   } else if (x<width/2 && y>height/2) {
     env->nb_rows=17;
     env->nb_cols=17;
     env->nb_bombs=60;
+    env->choose_parameters=false;
+    env->menu=false;
+  } else if (x>width/2 && y>height/2) {
+    if (env->choose_parameters) {
+      if (x>w/2 && y>7*h/8) {
+        env->choose_parameters=false;
+        env->menu=false;
+      }
+       else if (x>11*w/12 && y>6*h/8) {
+        env->nb_bombs++;
+      } else if (x>11*w/12 && y>5*h/8) {
+        env->nb_cols++;
+      } else if (x>11*w/12 && y>4*h/8) {
+        env->nb_rows++;
+      } else if (x>9*w/12 && x<10*w/12 && y>6*h/8) {
+        env->nb_bombs--;
+      } else if (x>9*w/12 && x<10*w/12 && y>5*h/8) {
+        env->nb_cols--;
+      } else if (x>9*w/12 && x<10*w/12 && y>4*h/8) {
+        env->nb_rows--;
+      }
+    } else {
+      env->choose_parameters=true;
+      env->nb_rows=8;
+      env->nb_cols=8;
+      env->nb_bombs=10;
+    }
   }
 }
 
@@ -287,8 +354,7 @@ bool process(SDL_Window *win, SDL_Renderer *ren, Env *env, SDL_Event *e) {
       uint i = (mouse.y - mouse.y % env->square_size) / env->square_size;
       uint j = (mouse.x - mouse.x % env->square_size) / env->square_size;
       if (env->menu) {
-        env->menu=false;
-        game_from_menu(env,w,h, mouse.x, mouse.y);
+        game_from_menu(win,env,w,h, mouse.x, mouse.y);
         return false;
       }
       if (i>=env->nb_rows || j>=env->nb_cols) {
