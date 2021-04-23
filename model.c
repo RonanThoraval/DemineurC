@@ -180,10 +180,11 @@ void render(SDL_Window *win, SDL_Renderer *ren, Env *env) {
     render_bar(win,ren,env);
 
     if (env->winning) {
-      SDL_RenderCopy(ren, env->ronan, NULL, NULL);
-      render_text(win,ren,env,0,"LOL BRAVO",w/2,h/2,0,0,w/5);
+      render_image(ren, env->ronan,0,0,w,h-env->bar_size);
+      render_text(win,ren,env,0,"Ronan applaudit.",w/2,h/2,0,0,w/10);
       return;
     }
+
 
     SDL_SetRenderDrawColor(ren, 0, 0, 0, SDL_ALPHA_OPAQUE);
     for (uint i=0 ; i<=env->nb_rows; i++) {
@@ -240,6 +241,9 @@ void render(SDL_Window *win, SDL_Renderer *ren, Env *env) {
               render_image(ren,env->flag,j*env->square_size,i*env->square_size,env->square_size,env->square_size);
             }
         }
+    }
+    if (env->losing) {
+      render_text(win,ren,env,2,"Perdu", w/2,h/2,0,0,w/10);
     }
 }
 
