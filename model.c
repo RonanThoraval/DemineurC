@@ -172,10 +172,13 @@ void render_parameters(SDL_Window *win, SDL_Renderer *ren, Env *env) {
   SDL_RenderDrawLine(ren,w/2,5*h/8,w,5*h/8);
   SDL_RenderDrawLine(ren,w/2,6*h/8,w,6*h/8);
   SDL_RenderDrawLine(ren,w/2,7*h/8,w,7*h/8);
-  render_text(win,ren,env,0,"Lignes : ",w/2+w/8,h/2+h/16,0,0,h/24);
-  render_text(win,ren,env,0,"Colonnes : ",w/2+w/8,5*h/8+h/16,0,0,h/24);
-  render_text(win,ren,env,0,"Bombes : ",w/2+w/8,6*h/8+h/16,0,0,h/24);
-  render_text(win,ren,env,0,"OK",3*w/4,7*h/8+h/16,0,0,h/24);
+  SDL_RenderDrawLine(ren,3*w/4,h/2,3*w/4,h-h/8);
+  SDL_RenderDrawLine(ren,10*w/12,h/2,10*w/12,h-h/8);
+  SDL_RenderDrawLine(ren,11*w/12,h/2,11*w/12,h-h/8);
+  render_text(win,ren,env,0,"Lignes : ",w/2+w/8,h/2+h/16,0,0,fmin(h/24,w/24));
+  render_text(win,ren,env,0,"Colonnes : ",w/2+w/8,5*h/8+h/16,0,0,fmin(h/24,w/24));
+  render_text(win,ren,env,0,"Bombes : ",w/2+w/8,6*h/8+h/16,0,0,fmin(h/24,w/24));
+  render_text(win,ren,env,0,"OK",3*w/4,7*h/8+h/16,0,0,fmin(h/24,w/24));
 
   char nb_rows[3];
   char nb_cols[3];
@@ -183,12 +186,12 @@ void render_parameters(SDL_Window *win, SDL_Renderer *ren, Env *env) {
   sprintf(nb_rows,"%u",env->nb_rows);
   sprintf(nb_cols,"%u",env->nb_cols);
   sprintf(nb_bombs,"%u",env->nb_bombs);
-  render_text(win,ren,env,0,nb_rows,10*w/12+w/24,4*h/8+h/16,0,0,h/24);
-  render_text(win,ren,env,0,nb_cols,10*w/12+w/24,5*h/8+h/16,0,0,h/24);
-  render_text(win,ren,env,0,nb_bombs,10*w/12+w/24,6*h/8+h/16,0,0,h/24);
+  render_text(win,ren,env,0,nb_rows,10*w/12+w/24,4*h/8+h/16,0,0,fmin(h/24,w/24));
+  render_text(win,ren,env,0,nb_cols,10*w/12+w/24,5*h/8+h/16,0,0,fmin(h/24,w/24));
+  render_text(win,ren,env,0,nb_bombs,10*w/12+w/24,6*h/8+h/16,0,0,fmin(h/24,w/24));
   for (uint i=1 ; i<=3 ; i++) {
-    render_text(win,ren,env,0,"+",11*w/12+w/24,(3+i)*h/8+h/16,0,0,h/24);
-    render_text(win,ren,env,0,"-",9*w/12+w/24,(3+i)*h/8+h/16,0,0,h/24);
+    render_text(win,ren,env,0,"+",11*w/12+w/24,(3+i)*h/8+h/16,0,0,fmin(h/24,w/24));
+    render_text(win,ren,env,0,"-",9*w/12+w/24,(3+i)*h/8+h/16,0,0,fmin(h/24,w/24));
   }
   
 }
