@@ -13,9 +13,6 @@ find_package(SDL2 REQUIRED)
 set(SDL2_ALL_INC ${SDL2_INCLUDE_DIRS})
 set(SDL2_ALL_LIBS ${SDL2_LIBRARIES} -lSDL2_ttf -lSDL2_image) # add extra SDL2 libraries
 
-add_executable(main main.c)
-add_library(game game.c)
-target_link_libraries(main game)
 
 include_directories(${SDL2_ALL_INC})
 add_executable(sdl sdl.c game.c model.c)
