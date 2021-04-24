@@ -137,14 +137,14 @@ void render_bar(SDL_Window *win, SDL_Renderer *ren, Env *env) {
   render_text(win,ren,env,0,"Nouvelle Partie",7*env->w/8,env->h-(env->bar_size)/2,3*env->w/16,env->bar_size/2,env->bar_size);
   render_text(win,ren,env,0,"Menu",5*env->w/8,env->h-env->bar_size/2,2*env->w/16,env->bar_size/2,env->bar_size);
 
-  render_image(ren, env->flag,5,env->h-env->bar_size+1, env->bar_size - 5, env->bar_size - 5);
-  render_image(ren,env->bomb,env->bar_size*2+5,env->h-env->bar_size+1, env->bar_size-5, env->bar_size-5);
+  render_image(ren, env->flag, 5, env->h-env->bar_size+1, env->bar_size - 5, env->bar_size - 5);
+  render_image(ren, env->bomb, env->bar_size*2+5, env->h-env->bar_size+1, env->bar_size-5, env->bar_size-5);
   char nb_bomb[3];
   sprintf(nb_bomb, "%u", env->nb_bombs);
   char nb_flag[3];
   sprintf(nb_flag, "%u", get_nb_flags(env->g));
-  render_text(win,ren,env,0,nb_flag,env->bar_size*3/2,env->nb_rows*env->square_size+env->bar_size/2,0,0,env->bar_size);
-  render_text(win,ren,env,0,nb_bomb,env->bar_size*7/2,env->nb_rows*env->square_size+env->bar_size/2,0,0,env->bar_size);
+  render_text(win, ren, env, 0, nb_flag, env->bar_size*3/2, env->h-env->bar_size/2, 0, 0, env->bar_size);
+  render_text(win, ren, env, 0, nb_bomb, env->bar_size*7/2, env->h-env->bar_size/2, 0, 0, env->bar_size);
 }
 
 /************ RENDER MENU ******************/
@@ -320,11 +320,17 @@ void game_from_menu( Env* env,uint width, uint height, float x, float y) {
       } else if (x>11*w/12 && y>4*h/8) {
         env->nb_rows++;
       } else if (x>9*w/12 && x<10*w/12 && y>6*h/8) {
-        env->nb_bombs--;
+		  if(env->nb_bombs!=1){
+			  env->nb_bombs--;
+		  }
       } else if (x>9*w/12 && x<10*w/12 && y>5*h/8) {
-        env->nb_cols--;
+		  if(env->nb_cols!=1){
+			  env->nb_cols--;
+		  }
       } else if (x>9*w/12 && x<10*w/12 && y>4*h/8) {
-        env->nb_rows--;
+		  if(env->nb_rows!=1){
+			  env->nb_rows--;
+		  }
       }
     } else {
       env->choose_parameters=true;
@@ -364,14 +370,18 @@ bool process(SDL_Window *win, SDL_Renderer *ren, Env *env, SDL_Event *e) {
           env->first_click=false;
           env->winning=false;
           env->losing=false;
-          game_delete(env->g);
-          env->g=NULL;
+		  if(env->g!=NULL){
+			game_delete(env->g);
+          	env->g=NULL;
+		  }
         } else if (mouse.x>=env->w/2 && mouse.y>=env->h-env->bar_size) {
           env->first_click=false;
           env->winning=false;
           env->losing=false;
-          game_delete(env->g);
-          env->g=NULL;
+          if(env->g!=NULL){
+			game_delete(env->g);
+          	env->g=NULL;
+		  }
           env->menu=true;
         }
         return false;
